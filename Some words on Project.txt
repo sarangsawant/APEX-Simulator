@@ -1,0 +1,11 @@
+keep daily log
+do not make this simultor complicated
+
+1) look at pipeline structure (In order piepline)
+2) 2 FUs - BRANCH AND JUMP with 1 cycle latency
+3) 1 cycle delay addded to make in order
+4) a function (address, instructiuon, ) for each stage of APEX
+5) 8 stages in total at max
+6) a structure which track the instruction
+7) implement forwardng - 
+8) design doc is imp
