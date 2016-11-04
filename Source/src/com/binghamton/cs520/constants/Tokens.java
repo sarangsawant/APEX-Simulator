@@ -1,7 +1,8 @@
 package com.binghamton.cs520.constants;
 
 public enum Tokens {
-	SPACE(" ");
+	SPACE(" "),COLON(":");
+	
 	
 	private String string;
 	
