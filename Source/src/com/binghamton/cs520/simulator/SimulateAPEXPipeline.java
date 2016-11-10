@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.binghamton.cs520.constants.InstructionEnum;
 import com.binghamton.cs520.constants.Tokens;
 
 public class SimulateAPEXPipeline {
@@ -55,8 +56,68 @@ public class SimulateAPEXPipeline {
 	private void decodeStageExecution(){
 		System.out.println("Inside decodeStageExecution method");
 		System.out.println("Instuction in decode stage -->" + decodeStageList.get(0).getInstruction());
-		//String data[] = instruction.split(Tokens.SPACE.getToken());
+		String instruction = decodeStageList.get(0).getInstruction();
+		String data[] = instruction.split(Tokens.SPACE.getToken());
+		Instruction inputInstruction = new Instruction();
 		
+		//Check for the type of instructions
+		if(InstructionEnum.ADD.equals(data[0])){
+			if(data[2].indexOf("#") < 0){
+				//ADD dest src1 src2
+				inputInstruction.setDestination(data[1]);
+				inputInstruction.setSource1(data[2]);
+				inputInstruction.setSource2(data[3]);
+			}else{
+				//ADD dest src1 #literal
+				inputInstruction.setDestination(data[1]);
+				inputInstruction.setSource1(data[2]);
+			}
+		}
+		else if(InstructionEnum.SUB.equals(data[0])){
+			if(data[2].indexOf("#") < 0){
+				//SUB dest src1 src2
+				inputInstruction.setDestination(data[1]);
+				inputInstruction.setSource1(data[2]);
+				inputInstruction.setSource2(data[3]);
+			}else{
+				//SUB dest src1 #literal
+				inputInstruction.setDestination(data[1]);
+				inputInstruction.setSource1(data[2]);
+			}
+		}
+		else if(InstructionEnum.MUL.equals(data[0])){
+			if(data[2].indexOf("#") < 0){
+				//MUL dest src1 src2
+				inputInstruction.setDestination(data[1]);
+				inputInstruction.setSource1(data[2]);
+				inputInstruction.setSource2(data[3]);
+			}else{
+				//MUL dest src1 #literal
+				inputInstruction.setDestination(data[1]);
+				inputInstruction.setSource1(data[2]);
+			}
+		}
+		else if(InstructionEnum.DIV.equals(data[0])){
+			if(data[2].indexOf("#") < 0){
+				//DIV dest src1 src2
+				inputInstruction.setDestination(data[1]);
+				inputInstruction.setSource1(data[2]);
+				inputInstruction.setSource2(data[3]);
+			}else{
+				//DIV dest src1 #literal
+				inputInstruction.setDestination(data[1]);
+				inputInstruction.setSource1(data[2]);
+			}
+		}
+		else if(InstructionEnum.MOVC.equals(data[0])){
+			//MOVC R4 2
+			inputInstruction.setDestination(data[1]);
+			inputInstruction.setSource1(data[2]);
+		}
+		else{
+			//throw exception or error message
+		}
+
 	}
 	
 	private void functionalUnitALU(){
