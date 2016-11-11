@@ -12,31 +12,36 @@ import java.util.Map;
 
 import com.binghamton.cs520.constants.InstructionEnum;
 import com.binghamton.cs520.constants.Tokens;
+import com.binghamton.cs520.entity.Instruction;
+import com.binghamton.cs520.entity.Operand;
 
 public class SimulateAPEXPipeline {
 	private static Map<Integer, Instruction> instructions = new HashMap<>();
+	private static Map<String, Integer> architectureRegFile = new HashMap<>();
+
 	private static int programCnt = 4000;
 	private static List<Instruction> fetchStageList = new ArrayList<>();
 	private static List<Instruction> decodeStageList = new ArrayList<>();
-	private static List<Instruction> executeStageList = new ArrayList<>();
+	private static List<Instruction> arithExecuteStageOneList = new ArrayList<>();
+	private static List<Instruction> arithExecuteStageTwoList = new ArrayList<>();
 	private static List<Instruction> memoryStageList = new ArrayList<>();
 	private static List<Instruction> writeBackStageList = new ArrayList<>();
-	
-	private void populateInstructionsInMap(){
+
+	private void populateInstructionsInMap() {
 		String fileName = "src/Input.txt";
 
 		File file = new File(fileName);
-	    FileReader fr;
+		FileReader fr;
 		try {
 			fr = new FileReader(file);
 			BufferedReader br = new BufferedReader(fr);
 			String line;
 			try {
-				while((line = br.readLine()) != null){
+				while ((line = br.readLine()) != null) {
 					String data[] = line.split(Tokens.COLON.getToken());
 					Instruction instruction = new Instruction();
 					instruction.setInstruction(data[1]);
-					instructions.put(Integer.parseInt(data[0]),instruction);
+					instructions.put(Integer.parseInt(data[0]), instruction);
 				}
 				br.close();
 				fr.close();
@@ -47,145 +52,203 @@ public class SimulateAPEXPipeline {
 			e.printStackTrace();
 		}
 	}
-	
-	private void fetchStageExecution(){
-		System.out.println("Inside fetchStageExecution method");
-		System.out.println(fetchStageList.get(0).getInstruction());
-	}
-	
-	private void decodeStageExecution(){
-		System.out.println("Inside decodeStageExecution method");
-		System.out.println("Instuction in decode stage -->" + decodeStageList.get(0).getInstruction());
-		String instruction = decodeStageList.get(0).getInstruction();
-		String data[] = instruction.split(Tokens.SPACE.getToken());
-		Instruction inputInstruction = new Instruction();
-		
-		//Check for the type of instructions
-		if(InstructionEnum.ADD.equals(data[0])){
-			if(data[2].indexOf("#") < 0){
-				//ADD dest src1 src2
-				inputInstruction.setDestination(data[1]);
-				inputInstruction.setSource1(data[2]);
-				inputInstruction.setSource2(data[3]);
-			}else{
-				//ADD dest src1 #literal
-				inputInstruction.setDestination(data[1]);
-				inputInstruction.setSource1(data[2]);
-			}
-		}
-		else if(InstructionEnum.SUB.equals(data[0])){
-			if(data[2].indexOf("#") < 0){
-				//SUB dest src1 src2
-				inputInstruction.setDestination(data[1]);
-				inputInstruction.setSource1(data[2]);
-				inputInstruction.setSource2(data[3]);
-			}else{
-				//SUB dest src1 #literal
-				inputInstruction.setDestination(data[1]);
-				inputInstruction.setSource1(data[2]);
-			}
-		}
-		else if(InstructionEnum.MUL.equals(data[0])){
-			if(data[2].indexOf("#") < 0){
-				//MUL dest src1 src2
-				inputInstruction.setDestination(data[1]);
-				inputInstruction.setSource1(data[2]);
-				inputInstruction.setSource2(data[3]);
-			}else{
-				//MUL dest src1 #literal
-				inputInstruction.setDestination(data[1]);
-				inputInstruction.setSource1(data[2]);
-			}
-		}
-		else if(InstructionEnum.DIV.equals(data[0])){
-			if(data[2].indexOf("#") < 0){
-				//DIV dest src1 src2
-				inputInstruction.setDestination(data[1]);
-				inputInstruction.setSource1(data[2]);
-				inputInstruction.setSource2(data[3]);
-			}else{
-				//DIV dest src1 #literal
-				inputInstruction.setDestination(data[1]);
-				inputInstruction.setSource1(data[2]);
-			}
-		}
-		else if(InstructionEnum.MOVC.equals(data[0])){
-			//MOVC R4 2
-			inputInstruction.setDestination(data[1]);
-			inputInstruction.setSource1(data[2]);
-		}
-		else{
-			//throw exception or error message
-		}
 
+	private void initializeArchitectureRegisterFile() {
+		System.out.println("Inside initializeRegisterFile method.");
+		for (Integer i = 0; i < 15; i++) {
+			// Initializing 16 architectural registers(R0 to R15), -99999
+			// indicates garbage value for each register
+			architectureRegFile.put(Tokens.REGISTER_PREFIX.getToken() + i.toString(), -99999);
+		}
 	}
-	
-	private void functionalUnitALU(){
-		System.out.println("functionalUnitALU");
-		System.out.println("Inside execute stage--> "+ executeStageList.get(0).getInstruction());
+
+	private void fetchStageExecution() {
+		System.out.println("Inside fetchStageExecution method");
+		System.out.println(fetchStageList.get(0).toString());
 	}
-	
-	private void memoryStageExecution(){
+
+	private void decodeStageExecution() {
+		System.out.println("Inside decodeStageExecution method");
+		System.out.println("Instuction in decode stage(Before decode) -->" + decodeStageList.get(0).toString());
+		String instruction = decodeStageList.get(0).getInstruction();
+		String instructionFields[] = instruction.split(Tokens.SPACE.getToken());
+
+		/*Check for the type of instructions
+		ADD dest src1 src2
+		SUB dest src1 src2
+		MUL dest src1 src2
+		DIV dest src1 src2*/
+		if (InstructionEnum.ADD.getInstructionType().equals(instructionFields[0])
+				|| InstructionEnum.SUB.getInstructionType().equals(instructionFields[0])
+				|| InstructionEnum.MUL.getInstructionType().equals(instructionFields[0])
+				|| InstructionEnum.DIV.getInstructionType().equals(instructionFields[0])) {
+			
+			decodeStageList.get(0).setInstructionType(instructionFields[0]);
+			
+			Operand destination = new Operand();
+			destination.setOperandName(instructionFields[1]);
+			decodeStageList.get(0).setDestination(destination);
+
+			if (instructionFields[2].indexOf("#") < 0) {
+				Operand source1 = new Operand();
+				source1.setOperandName(instructionFields[2]);
+				source1.setOperandValue(architectureRegFile.get(instructionFields[2]));
+				decodeStageList.get(0).setSource1(source1);
+			} else {
+				Operand source1 = new Operand();
+				source1.setOperandName(Tokens.LITERAL.getToken());
+				source1.setOperandValue(Integer.parseInt(instructionFields[2].substring(1)));
+				decodeStageList.get(0).setSource1(source1);
+			}
+
+			if (instructionFields[3].indexOf("#") < 0) {
+				Operand source2 = new Operand();
+				source2.setOperandName(instructionFields[3]);
+				source2.setOperandValue(architectureRegFile.get(instructionFields[3]));
+				decodeStageList.get(0).setSource1(source2);
+			} else {
+				Operand source2 = new Operand();
+				source2.setOperandName(Tokens.LITERAL.getToken());
+				source2.setOperandValue(Integer.parseInt(instructionFields[3].substring(1)));
+				decodeStageList.get(0).setSource1(source2);
+			}
+		} else if (InstructionEnum.MOVC.getInstructionType().equals(instructionFields[0])) {
+			// MOVC dest literal
+			decodeStageList.get(0).setInstructionType(instructionFields[0]);
+			
+			Operand destination = new Operand();
+			destination.setOperandName(instructionFields[1]);
+			decodeStageList.get(0).setDestination(destination);
+			
+			Operand source1 = new Operand();
+			source1.setOperandName(Tokens.LITERAL.getToken());
+			source1.setOperandValue(Integer.parseInt(instructionFields[2].substring(1)));
+			decodeStageList.get(0).setSource1(source1);
+		}else if(InstructionEnum.LOAD.getInstructionType().equals(instructionFields[0])){
+			//LOAD dest src1 literal
+			decodeStageList.get(0).setInstructionType(instructionFields[0]);
+			
+			Operand destination = new Operand();
+			destination.setOperandName(instructionFields[1]);
+			decodeStageList.get(0).setDestination(destination);
+			
+			Operand source1 = new Operand();
+			source1.setOperandName(instructionFields[2]);
+			source1.setOperandValue(architectureRegFile.get(instructionFields[2]));
+			decodeStageList.get(0).setSource1(source1);
+			
+			Operand source2 = new Operand();
+			source2.setOperandName(Tokens.LITERAL.getToken());
+			source2.setOperandValue(Integer.parseInt(instructionFields[3].substring(1)));
+			decodeStageList.get(0).setSource2(source2);
+		}else if(InstructionEnum.STORE.getInstructionType().equals(instructionFields[0])){
+			//STORE src1 src2 literal
+			decodeStageList.get(0).setInstructionType(instructionFields[0]);
+			
+			Operand source1 = new Operand();
+			source1.setOperandName(instructionFields[1]);
+			source1.setOperandValue(architectureRegFile.get(instructionFields[1]));
+			decodeStageList.get(0).setSource1(source1);
+			
+			Operand source2 = new Operand();
+			source2.setOperandName(instructionFields[2]);
+			source2.setOperandValue(Integer.parseInt(instructionFields[2].substring(1)));
+			decodeStageList.get(0).setSource2(source2);
+			
+			//assumed source 3 is literal
+			Operand source3 = new Operand();
+			source3.setOperandName(Tokens.LITERAL.getToken());
+			source3.setOperandValue(Integer.parseInt(instructionFields[3].substring(1)));
+			decodeStageList.get(0).setSource3(source3);
+		}
+		System.out.println("Instuction in decode stage(After decode) -->" + decodeStageList.get(0).toString());
+	}
+
+	private void arithStage1() {
+		System.out.println("Arith stage 1 --> " + arithExecuteStageOneList.get(0).toString());
+	}
+
+	private void arithmeticUnitStageExecution() {
+		System.out.println("arithmeticUnitStageExecution");
+		System.out.println("Inside execute stage 2 --> " + arithExecuteStageTwoList.get(0).toString());
+	}
+
+	private void memoryStageExecution() {
 		System.out.println("memoryStageExecution");
-		System.out.println("Inside memory stage--> "+ memoryStageList.get(0).getInstruction());
+		System.out.println("Inside memory stage--> " + memoryStageList.get(0).toString());
 	}
-	
-	private void writeBackStageExecution(){
+
+	private void writeBackStageExecution() {
 		System.out.println("writeBackStageExecution");
-		System.out.println("Inside writeBack stage--> "+ writeBackStageList.get(0).getInstruction());
+		System.out.println("Inside writeBack stage--> " + writeBackStageList.get(0).toString());
 	}
-	
-	public void simulateProcessingCycles(int totalSimulateCycles){
+
+	public void simulateProcessingCycles(int totalSimulateCycles) {
 		populateInstructionsInMap();
-		
-		for(int i=0; i < totalSimulateCycles ; i++){
+		initializeArchitectureRegisterFile();
+
+		for (int i = 0; i < totalSimulateCycles; i++) {
 			System.out.println("\nCYCLE --" + i);
-			if(fetchStageList.size() == 0){
+
+			// Fetch Stage
+			if (fetchStageList.size() == 0) {
 				fetchStageList.add(instructions.get(programCnt));
 				programCnt = programCnt + 1;
 				fetchStageExecution();
 				continue;
-			}else{
+			} else {
 				fetchStageList.add(instructions.get(programCnt));
 				programCnt = programCnt + 1;
 				decodeStageList.add(fetchStageList.get(0));
 				fetchStageList.remove(0);
 				fetchStageExecution();
 			}
-			
-			if(decodeStageList.size() == 1){
+
+			// Decode Stage
+			if (decodeStageList.size() == 1) {
 				decodeStageExecution();
 				continue;
-			}else{
-				executeStageList.add(decodeStageList.get(0));
+			} else {
+				arithExecuteStageOneList.add(decodeStageList.get(0));
 				decodeStageList.remove(0);
 				decodeStageExecution();
 			}
-			
-			if(executeStageList.size() == 1){
-				functionalUnitALU();
+
+			// ALU stage 1
+			if (arithExecuteStageOneList.size() == 1) {
+				arithStage1();
 				continue;
-			}else{
-				memoryStageList.add(executeStageList.get(0));
-				executeStageList.remove(0);
-				functionalUnitALU();
+			} else {
+				arithExecuteStageTwoList.add(arithExecuteStageOneList.get(0));
+				arithExecuteStageOneList.remove(0);
+				arithStage1();
 			}
-			
-			if(memoryStageList.size() == 1){
+
+			// ALU stage 2
+			if (arithExecuteStageTwoList.size() == 1) {
+				arithmeticUnitStageExecution();
+				continue;
+			} else {
+				memoryStageList.add(arithExecuteStageTwoList.get(0));
+				arithExecuteStageTwoList.remove(0);
+				arithmeticUnitStageExecution();
+			}
+
+			// MemoryStage
+			if (memoryStageList.size() == 1) {
 				memoryStageExecution();
 				continue;
-			}else{
+			} else {
 				writeBackStageList.add(memoryStageList.get(0));
 				memoryStageList.remove(0);
 				memoryStageExecution();
 			}
-			
-			if(writeBackStageList.size() == 1){
+
+			// WriteBack
+			if (writeBackStageList.size() == 1) {
 				writeBackStageExecution();
 				writeBackStageList.remove(0);
-				continue;
 			}
 		}
 	}
-	
 }
