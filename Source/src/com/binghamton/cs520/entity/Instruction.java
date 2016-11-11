@@ -1,13 +1,12 @@
-package com.binghamton.cs520.simulator;
+package com.binghamton.cs520.entity;
 
 public class Instruction {
 	private String instruction;
 	private String instructionType;
-	private String source1;
-	private String source2;
-	private String source3;
-	private String destination;
-	private String literal;
+	private Operand source1;
+	private Operand source2;
+	private Operand source3;
+	private Operand destination;
 	
 	public Instruction() {
 		// TODO Auto-generated constructor stub
@@ -29,44 +28,42 @@ public class Instruction {
 		this.instructionType = instructionType;
 	}
 
-	public String getSource1() {
+	
+	public Operand getSource1() {
 		return source1;
 	}
 
-	public void setSource1(String source1) {
+	public void setSource1(Operand source1) {
 		this.source1 = source1;
 	}
 
-	public String getSource2() {
+	public Operand getSource2() {
 		return source2;
 	}
 
-	public void setSource2(String source2) {
+	public void setSource2(Operand source2) {
 		this.source2 = source2;
 	}
 
-	public String getSource3() {
+	public Operand getSource3() {
 		return source3;
 	}
 
-	public void setSource3(String source3) {
+	public void setSource3(Operand source3) {
 		this.source3 = source3;
 	}
 
-	public String getDestination() {
+	public Operand getDestination() {
 		return destination;
 	}
 
-	public void setDestination(String destination) {
+	public void setDestination(Operand destination) {
 		this.destination = destination;
 	}
 
-	public String getLiteral() {
-		return literal;
+	@Override
+	public String toString() {
+		return "Instruction [instruction=" + instruction + ", instructionType=" + instructionType + ", source1="
+				+ source1 + ", source2=" + source2 + ", source3=" + source3 + ", destination=" + destination + "]";
 	}
-
-	public void setLiteral(String literal) {
-		this.literal = literal;
-	}
-	
 }
