@@ -237,17 +237,22 @@ public class SimulateAPEXPipeline {
 
 			// Fetch Stage
 			if (fetchStageList.size() == 0) {
-				fetchStageList.add(instructions.get(programCnt));
-				programCnt = programCnt + 1;
-				fetchStageExecution();
-				continue;
+				if(instructions.get(programCnt) != null){
+					fetchStageList.add(instructions.get(programCnt));
+					programCnt = programCnt + 1;
+					fetchStageExecution();
+					continue;
+				}
 			} else {
-				fetchStageList.add(instructions.get(programCnt));
-				programCnt = programCnt + 1;
-				decodeStageList.add(fetchStageList.get(0));
-				fetchStageList.remove(0);
-				if(!(fetchStageList.get(0).equals("HALT")))
-				fetchStageExecution();
+				if(instructions.get(programCnt) != null){
+					fetchStageList.add(instructions.get(programCnt));
+					programCnt = programCnt + 1;
+					decodeStageList.add(fetchStageList.get(0));
+					fetchStageList.remove(0);
+					//if(!("HALT".equals(fetchStageList.get(0)))){
+					fetchStageExecution();
+					//}
+				}
 			}
 
 			// Decode Stage
