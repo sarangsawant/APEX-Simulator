@@ -4,6 +4,6 @@ public class MainClass {
 
 	public static void main(String[] args) {
 		SimulateAPEXPipeline simulate = new SimulateAPEXPipeline();
-		simulate.simulateProcessingCycles(5);
+		simulate.simulateProcessingCycles(12);
 	}
 }

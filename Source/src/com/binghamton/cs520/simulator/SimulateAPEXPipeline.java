@@ -15,6 +15,7 @@ import com.binghamton.cs520.constants.Tokens;
 import com.binghamton.cs520.entity.Instruction;
 import com.binghamton.cs520.entity.Operand;
 
+
 public class SimulateAPEXPipeline {
 	private static Map<Integer, Instruction> instructions = new HashMap<>();
 	private static Map<String, Integer> architectureRegFile = new HashMap<>();
@@ -105,12 +106,12 @@ public class SimulateAPEXPipeline {
 				Operand source2 = new Operand();
 				source2.setOperandName(instructionFields[3]);
 				source2.setOperandValue(architectureRegFile.get(instructionFields[3]));
-				decodeStageList.get(0).setSource1(source2);
+				decodeStageList.get(0).setSource2(source2);
 			} else {
 				Operand source2 = new Operand();
 				source2.setOperandName(Tokens.LITERAL.getToken());
 				source2.setOperandValue(Integer.parseInt(instructionFields[3].substring(1)));
-				decodeStageList.get(0).setSource1(source2);
+				decodeStageList.get(0).setSource2(source2);
 			}
 		} else if (InstructionEnum.MOVC.getInstructionType().equals(instructionFields[0])) {
 			// MOVC dest literal
@@ -171,6 +172,50 @@ public class SimulateAPEXPipeline {
 	private void arithmeticUnitStageExecution() {
 		System.out.println("arithmeticUnitStageExecution");
 		System.out.println("Inside execute stage 2 --> " + arithExecuteStageTwoList.get(0).toString());
+		//check for instruction type
+		
+		if(InstructionEnum.ADD.getInstructionType().equals(arithExecuteStageTwoList.get(0).getInstructionType())){
+			//logic for ADD instruction
+			int src1 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
+			int src2 = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+			int dest = src1 + src2;
+			arithExecuteStageTwoList.get(0).getDestination().setOperandValue(dest);
+		}
+		else if(InstructionEnum.SUB.getInstructionType().equals(arithExecuteStageTwoList.get(0).getInstructionType())){
+			//logic for SUB instruction
+			int src1 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
+			int src2 = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+			int dest = src1 - src2;
+			arithExecuteStageTwoList.get(0).getDestination().setOperandValue(dest);
+		}
+		else if(InstructionEnum.MUL.getInstructionType().equals(arithExecuteStageTwoList.get(0).getInstructionType())){
+			//logic for MUL instruction
+			int src1 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
+			int src2 = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+			int dest = src1 * src2;
+			arithExecuteStageTwoList.get(0).getDestination().setOperandValue(dest);
+		}
+		else if(InstructionEnum.DIV.getInstructionType().equals(arithExecuteStageTwoList.get(0).getInstructionType())){
+			int src1 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
+			int src2 = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+			int dest = src1 / src2;
+			arithExecuteStageTwoList.get(0).getDestination().setOperandValue(dest);
+		}
+		else if(InstructionEnum.LOAD.getInstructionType().equals(arithExecuteStageTwoList.get(0).getInstructionType())){
+			//LOAD dest src1 literal
+			int src1 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
+			int literal = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+			int dest = src1 + literal;
+			arithExecuteStageTwoList.get(0).getDestination().setOperandValue(dest);
+		}
+		else if(InstructionEnum.MOVC.getInstructionType().equals(arithExecuteStageTwoList.get(0).getInstructionType())){
+			//STORE src1 src2 literal
+			/*int src2 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
+			int literal = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+			int src1 = src2 + literal;
+			arithExecuteStageTwoList.get(0).getDestination().setOperandValue(src1);*/
+		}
+		System.out.println("After Execution:: " + arithExecuteStageTwoList.get(0).toString());
 	}
 
 	private void memoryStageExecution() {
@@ -201,6 +246,7 @@ public class SimulateAPEXPipeline {
 				programCnt = programCnt + 1;
 				decodeStageList.add(fetchStageList.get(0));
 				fetchStageList.remove(0);
+				if(!(fetchStageList.get(0).equals("HALT")))
 				fetchStageExecution();
 			}
 
