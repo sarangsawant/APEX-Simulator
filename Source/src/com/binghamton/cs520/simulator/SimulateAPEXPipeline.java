@@ -1,13 +1,7 @@
 package com.binghamton.cs520.simulator;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +23,7 @@ public class SimulateAPEXPipeline {
 	private List<Instruction> arithExecuteStageTwoList = new ArrayList<>();
 	private List<Instruction> memoryStageList = new ArrayList<>();
 	private List<Instruction> writeBackStageList = new ArrayList<>();
+	//private HashMap<Integer, String> dependencyMap = new HashMap<>();
 
 	private void fetchStageExecution() {
 		System.out.println("Inside fetchStageExecution method");
@@ -42,7 +37,7 @@ public class SimulateAPEXPipeline {
 			System.out.println("Instuction in decode stage(Before decode) -->" + decodeStageList.get(0).toString());
 			String instruction = decodeStageList.get(0).getInstruction();
 			String instructionFields[] = instruction.split(Tokens.SPACE.getToken());
-
+			boolean isDependent = checkForDependency(instruction);
 			/*
 			 * Check for the type of instructions ADD dest src1 src2 SUB dest
 			 * src1 src2 MUL dest src1 src2 DIV dest src1 src2
@@ -315,5 +310,15 @@ public class SimulateAPEXPipeline {
 
 		}
 		structures.displayStructuresContent(architectureRegFile, memory);
+	}
+	
+	private boolean checkForDependency(String instruction){
+		
+		if(instruction.length() > 0){
+			//loop to check for next 4 instructions for dependency
+			
+			return true;
+		}
+		return false;
 	}
 }
