@@ -7,6 +7,10 @@ public class Instruction {
 	private Operand source2;
 	private Operand source3;
 	private Operand destination;
+	private boolean isDecoded = false;
+	private boolean isALU1Executed = false;
+	private boolean isALU2Executed = false;
+	private boolean isMemoryExecuted = false;
 	
 	public Instruction() {
 		// TODO Auto-generated constructor stub
@@ -60,10 +64,47 @@ public class Instruction {
 	public void setDestination(Operand destination) {
 		this.destination = destination;
 	}
+	
+	public boolean isDecoded() {
+		return isDecoded;
+	}
+
+	public void setDecoded(boolean isDecoded) {
+		this.isDecoded = isDecoded;
+	}
+
+	public boolean isALU1Executed() {
+		return isALU1Executed;
+	}
+
+	public void setALU1Executed(boolean isALU1Executed) {
+		this.isALU1Executed = isALU1Executed;
+	}
+
+	public boolean isALU2Executed() {
+		return isALU2Executed;
+	}
+
+	public void setALU2Executed(boolean isALU2Executed) {
+		this.isALU2Executed = isALU2Executed;
+	}
+
+	public boolean isMemoryExecuted() {
+		return isMemoryExecuted;
+	}
+
+	public void setMemoryExecuted(boolean isMemoryExecuted) {
+		this.isMemoryExecuted = isMemoryExecuted;
+	}
 
 	@Override
 	public String toString() {
 		return "Instruction [instruction=" + instruction + ", instructionType=" + instructionType + ", source1="
-				+ source1 + ", source2=" + source2 + ", source3=" + source3 + ", destination=" + destination + "]";
+				+ source1 + ", source2=" + source2 + ", source3=" + source3 + ", destination=" + destination
+				+ ", isDecoded=" + isDecoded + ", isALU1Executed=" + isALU1Executed + ", isALU2Executed="
+				+ isALU2Executed + ", isMemoryExecuted=" + isMemoryExecuted + "]";
 	}
+
+	
+
 }
