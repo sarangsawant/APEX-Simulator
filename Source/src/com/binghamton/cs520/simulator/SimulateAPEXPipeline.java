@@ -116,7 +116,7 @@ public class SimulateAPEXPipeline {
 
 				Operand source2 = new Operand();
 				source2.setOperandName(instructionFields[2]);
-				source2.setOperandValue(Integer.parseInt(instructionFields[2].substring(1)));
+				source2.setOperandValue(architectureRegFile.get(instructionFields[2]));
 				decodeStageList.get(0).setSource2(source2);
 
 				// assumed source 3 is literal
