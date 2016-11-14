@@ -2,6 +2,7 @@ package com.binghamton.cs520.simulator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +38,9 @@ public class SimulateAPEXPipeline {
 			System.out.println("Instuction in decode stage(Before decode) -->" + decodeStageList.get(0).toString());
 			String instruction = decodeStageList.get(0).getInstruction();
 			String instructionFields[] = instruction.split(Tokens.SPACE.getToken());
-			boolean isDependent = checkForDependency(instruction);
+			
+			
+			
 			/*
 			 * Check for the type of instructions ADD dest src1 src2 SUB dest
 			 * src1 src2 MUL dest src1 src2 DIV dest src1 src2
@@ -238,6 +241,7 @@ public class SimulateAPEXPipeline {
 		instructions = structures.populateInstructionsInMap();
 		architectureRegFile = structures.initializeArchitectureRegisterFile();
 		memory = structures.initializeMemory();
+		Map<Integer, Instruction> allInstructions = structures.populateInstructions(instructions,architectureRegFile);
 		
 		for (int i = 0; i < totalSimulateCycles; i++) {
 			System.out.println("\nCYCLE --" + (i + 1));
@@ -263,6 +267,9 @@ public class SimulateAPEXPipeline {
 			}
 
 			// Decode Stage
+			//Check for dependency
+			//boolean isDependent = checkForDependency(allInstructions,decodeStageList.get(0));
+			
 			if (decodeStageList.size() == 1 && !decodeStageList.get(0).isDecoded()) {
 				decodeStageExecution();
 				continue;
@@ -312,11 +319,13 @@ public class SimulateAPEXPipeline {
 		structures.displayStructuresContent(architectureRegFile, memory);
 	}
 	
-	private boolean checkForDependency(String instruction){
-		
-		if(instruction.length() > 0){
+
+	private boolean checkForDependency(Map<Integer, Instruction> instructionMap,Instruction inputInstruction){
+
+		if(instructionMap.size() > 0){
 			//loop to check for next 4 instructions for dependency
-			
+			//if()
+			System.out.println("Instructions in checkfordepndency : "+ instructionMap);
 			return true;
 		}
 		return false;

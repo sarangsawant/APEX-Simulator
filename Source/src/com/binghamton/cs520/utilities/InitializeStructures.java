@@ -9,8 +9,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.binghamton.cs520.constants.InstructionEnum;
 import com.binghamton.cs520.constants.Tokens;
 import com.binghamton.cs520.entity.Instruction;
+import com.binghamton.cs520.entity.Operand;
 
 public class InitializeStructures {
 
@@ -75,5 +77,104 @@ public class InitializeStructures {
 		for(int i=0 ; i< 50 ; i++){
 			System.out.println("Memory[" + i + "] -> " + memory[i]);
 		}
+	}
+	
+	public Map<Integer, Instruction> populateInstructions(Map<Integer, Instruction> instructions2, Map<String, Integer> architectureRegFile) {
+		System.out.println(instructions2.size());
+		//do same as decode stage function
+		int counter = 4000;
+		Map<Integer, Instruction> instructionMap = new HashMap<>();
+		for(int i=0; i<instructions2.size();i++){
+			String instruction = instructions2.get(counter).getInstruction();
+			String instructionFields[] = instruction.split(Tokens.SPACE.getToken());
+			Instruction inputInstruction = new Instruction();
+			if (InstructionEnum.ADD.getInstructionType().equals(instructionFields[0])
+					|| InstructionEnum.SUB.getInstructionType().equals(instructionFields[0])
+					|| InstructionEnum.MUL.getInstructionType().equals(instructionFields[0])
+					|| InstructionEnum.DIV.getInstructionType().equals(instructionFields[0])) {
+				
+				inputInstruction.setInstructionType(instructionFields[0]);
+
+				Operand destination = new Operand();
+				destination.setOperandName(instructionFields[1]);
+				inputInstruction.setDestination(destination);
+				
+				if (instructionFields[2].indexOf("#") < 0) {
+					Operand source1 = new Operand();
+					source1.setOperandName(instructionFields[2]);
+					source1.setOperandValue(architectureRegFile.get(instructionFields[2]));
+					inputInstruction.setSource1(source1);
+				} else {
+					Operand source1 = new Operand();
+					source1.setOperandName(Tokens.LITERAL.getToken());
+					source1.setOperandValue(Integer.parseInt(instructionFields[2].substring(1)));
+					inputInstruction.setSource1(source1);
+				}
+
+				if (instructionFields[3].indexOf("#") < 0) {
+					Operand source2 = new Operand();
+					source2.setOperandName(instructionFields[3]);
+					source2.setOperandValue(architectureRegFile.get(instructionFields[3]));
+					inputInstruction.setSource2(source2);
+				} else {
+					Operand source2 = new Operand();
+					source2.setOperandName(Tokens.LITERAL.getToken());
+					source2.setOperandValue(Integer.parseInt(instructionFields[3].substring(1)));
+					inputInstruction.setSource2(source2);
+				}
+			} else if (InstructionEnum.MOVC.getInstructionType().equals(instructionFields[0])) {
+				// MOVC dest literal
+				inputInstruction.setInstructionType(instructionFields[0]);
+
+				Operand destination = new Operand();
+				destination.setOperandName(instructionFields[1]);
+				inputInstruction.setDestination(destination);
+				
+				Operand source1 = new Operand();
+				source1.setOperandName(Tokens.LITERAL.getToken());
+				source1.setOperandValue(Integer.parseInt(instructionFields[2].substring(1)));
+				inputInstruction.setSource1(source1);
+			} else if (InstructionEnum.LOAD.getInstructionType().equals(instructionFields[0])) {
+				// LOAD dest src1 literal
+				inputInstruction.setInstructionType(instructionFields[0]);
+
+				Operand destination = new Operand();
+				destination.setOperandName(instructionFields[1]);
+				inputInstruction.setDestination(destination);
+				
+				Operand source1 = new Operand();
+				source1.setOperandName(instructionFields[2]);
+				source1.setOperandValue(architectureRegFile.get(instructionFields[2]));
+				inputInstruction.setSource1(source1);
+				
+				Operand source2 = new Operand();
+				source2.setOperandName(Tokens.LITERAL.getToken());
+				source2.setOperandValue(Integer.parseInt(instructionFields[3].substring(1)));
+				inputInstruction.setSource2(source2);
+			} else if (InstructionEnum.STORE.getInstructionType().equals(instructionFields[0])) {
+				// STORE src1 src2 literal
+				inputInstruction.setInstructionType(instructionFields[0]);
+
+				Operand source1 = new Operand();
+				source1.setOperandName(instructionFields[1]);
+				source1.setOperandValue(architectureRegFile.get(instructionFields[1]));
+				inputInstruction.setSource1(source1);
+				
+				Operand source2 = new Operand();
+				source2.setOperandName(instructionFields[2]);
+				source2.setOperandValue(architectureRegFile.get(instructionFields[2]));
+				inputInstruction.setSource2(source2);
+				
+				// assumed source 3 is literal
+				Operand source3 = new Operand();
+				source3.setOperandName(Tokens.LITERAL.getToken());
+				source3.setOperandValue(Integer.parseInt(instructionFields[3].substring(1)));
+				inputInstruction.setSource3(source3);
+			}
+			instructionMap.put(counter, inputInstruction);
+			System.out.println("instruction obj--> "+counter + "  " +instructionMap.get(counter));
+			counter++;
+		}
+		return instructionMap;
 	}
 }
