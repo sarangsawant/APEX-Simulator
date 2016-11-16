@@ -11,6 +11,8 @@ public class Instruction {
 	private boolean isALU1Executed = false;
 	private boolean isALU2Executed = false;
 	private boolean isMemoryExecuted = false;
+	private int address;
+	private int latchIndex;
 	
 	public Instruction() {
 		// TODO Auto-generated constructor stub
@@ -103,6 +105,22 @@ public class Instruction {
 				+ source1 + ", source2=" + source2 + ", source3=" + source3 + ", destination=" + destination
 				+ ", isDecoded=" + isDecoded + ", isALU1Executed=" + isALU1Executed + ", isALU2Executed="
 				+ isALU2Executed + ", isMemoryExecuted=" + isMemoryExecuted + "]";
+	}
+
+	public int getAddress() {
+		return address;
+	}
+
+	public void setAddress(int address) {
+		this.address = address;
+	}
+
+	public int getLatchIndex() {
+		return latchIndex;
+	}
+
+	public void setLatchIndex(int latchIndex) {
+		this.latchIndex = latchIndex;
 	}
 
 	

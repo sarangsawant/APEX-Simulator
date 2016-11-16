@@ -2,13 +2,13 @@ package com.binghamton.cs520.simulator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import com.binghamton.cs520.constants.InstructionEnum;
 import com.binghamton.cs520.constants.Tokens;
 import com.binghamton.cs520.entity.Instruction;
+import com.binghamton.cs520.entity.LatchSource;
 import com.binghamton.cs520.entity.Operand;
 import com.binghamton.cs520.utilities.InitializeStructures;
 
@@ -24,7 +24,10 @@ public class SimulateAPEXPipeline {
 	private List<Instruction> arithExecuteStageTwoList = new ArrayList<>();
 	private List<Instruction> memoryStageList = new ArrayList<>();
 	private List<Instruction> writeBackStageList = new ArrayList<>();
-	//private HashMap<Integer, String> dependencyMap = new HashMap<>();
+	private Map<Integer, Instruction> allInstructions = new HashMap<Integer, Instruction>();
+	private Map<String, LatchSource> aluLatch = new HashMap<>();
+	private Map<String, LatchSource> memoryLatch = new HashMap<>();
+	private boolean checkStall = false;
 
 	private void fetchStageExecution() {
 		System.out.println("Inside fetchStageExecution method");
@@ -133,68 +136,90 @@ public class SimulateAPEXPipeline {
 		}
 	}
 
-	private void arithStage1() {
+	private void arithmeticUnitStageExecution2() {
 		System.out.println("Inside arithStage 1 method");
 		if (arithExecuteStageOneList.size() > 0) {
-			System.out.println("Arith stage 1 --> " + arithExecuteStageOneList.get(0).toString());
-			arithExecuteStageOneList.get(0).setALU1Executed(true);
+			System.out.println("Arith stage 1 --> " + arithExecuteStageTwoList.get(0).toString());
+			arithExecuteStageTwoList.get(0).setALU1Executed(true);
 		}
 	}
 
-	private void arithmeticUnitStageExecution() {
+	private void arithmeticUnitStageExecution1() {
 		System.out.println("arithmeticUnitStageExecution");
 		if (arithExecuteStageTwoList.size() > 0) {
-			System.out.println("Inside execute stage 2 --> " + arithExecuteStageTwoList.get(0).toString());
+			System.out.println("Inside execute stage 1 --> " + arithExecuteStageOneList.get(0).toString());
 			// check for instruction type
 
-			if (InstructionEnum.ADD.getInstructionType().equals(arithExecuteStageTwoList.get(0).getInstructionType())) {
+			if (InstructionEnum.ADD.getInstructionType().equals(arithExecuteStageOneList.get(0).getInstructionType())) {
 				// logic for ADD instruction
-				int src1 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
-				int src2 = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+				int src1=0, src2=0;
+				if(aluLatch.get(arithExecuteStageOneList.get(0).getSource1().getOperandName()).getValidFlag()==0){
+					src1 = arithExecuteStageOneList.get(0).getSource1().getOperandValue();
+				}else{
+					src1 = aluLatch.get(arithExecuteStageOneList.get(0).getSource1().getOperandName()).getValue();
+					aluLatch.get(arithExecuteStageOneList.get(0).getSource1().getOperandName()).setValidFlag(0);
+				}
+				
+				if(aluLatch.get(arithExecuteStageOneList.get(0).getSource2().getOperandName()).getValidFlag()==0){
+					src2 = arithExecuteStageOneList.get(0).getSource2().getOperandValue();
+				}else{
+					src2 = aluLatch.get(arithExecuteStageOneList.get(0).getSource2().getOperandName()).getValue();
+					aluLatch.get(arithExecuteStageOneList.get(0).getSource2().getOperandName()).setValidFlag(0);
+				}
+				
 				int dest = src1 + src2;
-				arithExecuteStageTwoList.get(0).getDestination().setOperandValue(dest);
+				arithExecuteStageOneList.get(0).getDestination().setOperandValue(dest);
 			} else if (InstructionEnum.SUB.getInstructionType()
-					.equals(arithExecuteStageTwoList.get(0).getInstructionType())) {
+					.equals(arithExecuteStageOneList.get(0).getInstructionType())) {
 				// logic for SUB instruction
-				int src1 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
-				int src2 = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+				int src1 = arithExecuteStageOneList.get(0).getSource1().getOperandValue();
+				int src2 = arithExecuteStageOneList.get(0).getSource2().getOperandValue();
 				int dest = src1 - src2;
-				arithExecuteStageTwoList.get(0).getDestination().setOperandValue(dest);
+				arithExecuteStageOneList.get(0).getDestination().setOperandValue(dest);
 			} else if (InstructionEnum.MUL.getInstructionType()
-					.equals(arithExecuteStageTwoList.get(0).getInstructionType())) {
+					.equals(arithExecuteStageOneList.get(0).getInstructionType())) {
 				// logic for MUL instruction
-				int src1 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
-				int src2 = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+				int src1 = arithExecuteStageOneList.get(0).getSource1().getOperandValue();
+				int src2 = arithExecuteStageOneList.get(0).getSource2().getOperandValue();
 				int dest = src1 * src2;
-				arithExecuteStageTwoList.get(0).getDestination().setOperandValue(dest);
+				arithExecuteStageOneList.get(0).getDestination().setOperandValue(dest);
 			} else if (InstructionEnum.DIV.getInstructionType()
-					.equals(arithExecuteStageTwoList.get(0).getInstructionType())) {
-				int src1 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
-				int src2 = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+					.equals(arithExecuteStageOneList.get(0).getInstructionType())) {
+				int src1 = arithExecuteStageOneList.get(0).getSource1().getOperandValue();
+				int src2 = arithExecuteStageOneList.get(0).getSource2().getOperandValue();
 				int dest = src1 / src2;
-				arithExecuteStageTwoList.get(0).getDestination().setOperandValue(dest);
+				arithExecuteStageOneList.get(0).getDestination().setOperandValue(dest);
 			} else if (InstructionEnum.LOAD.getInstructionType()
-					.equals(arithExecuteStageTwoList.get(0).getInstructionType())) {
+					.equals(arithExecuteStageOneList.get(0).getInstructionType())) {
 				// LOAD dest src1 literal
-				int src1 = arithExecuteStageTwoList.get(0).getSource1().getOperandValue();
-				int literal = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
+				int src1 = arithExecuteStageOneList.get(0).getSource1().getOperandValue();
+				int literal = arithExecuteStageOneList.get(0).getSource2().getOperandValue();
 				int dest = src1 + literal;
-				arithExecuteStageTwoList.get(0).getDestination().setOperandValue(dest);
+				arithExecuteStageOneList.get(0).getDestination().setOperandValue(dest);
 			} else if (InstructionEnum.STORE.getInstructionType()
-					.equals(arithExecuteStageTwoList.get(0).getInstructionType())) {
+					.equals(arithExecuteStageOneList.get(0).getInstructionType())) {
 				// STORE src1 src2 literal
 
-				int src2 = arithExecuteStageTwoList.get(0).getSource2().getOperandValue();
-				int literal = arithExecuteStageTwoList.get(0).getSource3().getOperandValue();
+				int src2 = arithExecuteStageOneList.get(0).getSource2().getOperandValue();
+				int literal = arithExecuteStageOneList.get(0).getSource3().getOperandValue();
 				int src1 = src2 + literal;
 
 				Operand destination = new Operand();
 				destination.setOperandValue(src1);
-				arithExecuteStageTwoList.get(0).setDestination(destination);
+				arithExecuteStageOneList.get(0).setDestination(destination);
 
 			}
-			System.out.println("After Execution:: " + arithExecuteStageTwoList.get(0).toString());
-			arithExecuteStageTwoList.get(0).setALU2Executed(true);
+			System.out.println("After Execution:: " + arithExecuteStageOneList.get(0).toString());
+			arithExecuteStageOneList.get(0).setALU2Executed(true);
+			
+			if(arithExecuteStageOneList.get(0).getLatchIndex() > -1){
+				
+				aluLatch.get(arithExecuteStageOneList.get(0).getDestination().getOperandName()).
+				setValue(arithExecuteStageOneList.get(0).getDestination().getOperandValue());
+				
+				aluLatch.get(arithExecuteStageOneList.get(0).getDestination().getOperandName()).setValidFlag(1);
+				
+			}
 		}
 	}
 
@@ -241,7 +266,8 @@ public class SimulateAPEXPipeline {
 		instructions = structures.populateInstructionsInMap();
 		architectureRegFile = structures.initializeArchitectureRegisterFile();
 		memory = structures.initializeMemory();
-		Map<Integer, Instruction> allInstructions = structures.populateInstructions(instructions,architectureRegFile);
+		structures.initalizeLatches(aluLatch);
+		structures.initalizeLatches(memoryLatch);
 		
 		for (int i = 0; i < totalSimulateCycles; i++) {
 			System.out.println("\nCYCLE --" + (i + 1));
@@ -267,36 +293,52 @@ public class SimulateAPEXPipeline {
 			}
 
 			// Decode Stage
-			//Check for dependency
+			/**Check for dependency?????? -> 
+			 * 	yes -> stall karaycha ahe ka? -> ho -> kadhi arynt karaycha?
+			*	stall only if -> instruction is dependent, flow dependent, 
+			*	-x    wait till flag of latch is set true.
+			*	
+			*	no -> 
+			**/
 			//boolean isDependent = checkForDependency(allInstructions,decodeStageList.get(0));
-			
+			checkStall = false;
+			if (decodeStageList.size() > 0) {
+				structures.setLatchIndexOfInstruction(allInstructions, decodeStageList.get(0));
+				checkStall = structures.checkForStall(allInstructions, decodeStageList.get(0));
+				if(checkStall==true){
+					
+				}
+			}
+			System.out.println("checkstll--- "+ checkStall);
 			if (decodeStageList.size() == 1 && !decodeStageList.get(0).isDecoded()) {
 				decodeStageExecution();
 				continue;
 			} else if (decodeStageList.size() > 0) {
-				arithExecuteStageOneList.add(decodeStageList.get(0));
-				decodeStageList.remove(0);
-				decodeStageExecution();
+				if (!checkStall) {
+					arithExecuteStageOneList.add(decodeStageList.get(0));
+					decodeStageList.remove(0);
+					decodeStageExecution();
+				}
 			}
 
 			// ALU stage 1
 			if (arithExecuteStageOneList.size() == 1 && !arithExecuteStageOneList.get(0).isALU1Executed()) {
-				arithStage1();
+				arithmeticUnitStageExecution1();
 				continue;
 			} else if (arithExecuteStageOneList.size() > 0) {
 				arithExecuteStageTwoList.add(arithExecuteStageOneList.get(0));
 				arithExecuteStageOneList.remove(0);
-				arithStage1();
+				arithmeticUnitStageExecution1();
 			}
 
 			// ALU stage 2
 			if (arithExecuteStageTwoList.size() == 1 && !arithExecuteStageTwoList.get(0).isALU2Executed()) {
-				arithmeticUnitStageExecution();
+				arithmeticUnitStageExecution2();
 				continue;
 			} else if (arithExecuteStageTwoList.size() > 0) {
 				memoryStageList.add(arithExecuteStageTwoList.get(0));
 				arithExecuteStageTwoList.remove(0);
-				arithmeticUnitStageExecution();
+				arithmeticUnitStageExecution2();
 			}
 
 			// MemoryStage
@@ -319,15 +361,13 @@ public class SimulateAPEXPipeline {
 		structures.displayStructuresContent(architectureRegFile, memory);
 	}
 	
-
-	private boolean checkForDependency(Map<Integer, Instruction> instructionMap,Instruction inputInstruction){
-
-		if(instructionMap.size() > 0){
-			//loop to check for next 4 instructions for dependency
-			//if()
-			System.out.println("Instructions in checkfordepndency : "+ instructionMap);
-			return true;
-		}
-		return false;
-	}
+	/*private void setLatchIndex(Instruction instruction){
+		InitializeStructures structures = new InitializeStructures();
+		allInstructions = structures.populateInstructions(instructions,architectureRegFile);
+		int length = structures.checkLengthBetDependentInstr(allInstructions, instruction);
+		
+		
+		
+	}*/
+	
 }

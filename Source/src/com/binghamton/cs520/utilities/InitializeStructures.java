@@ -12,10 +12,11 @@ import java.util.Map;
 import com.binghamton.cs520.constants.InstructionEnum;
 import com.binghamton.cs520.constants.Tokens;
 import com.binghamton.cs520.entity.Instruction;
+import com.binghamton.cs520.entity.LatchSource;
 import com.binghamton.cs520.entity.Operand;
 
 public class InitializeStructures {
-
+	
 	public Map<Integer, Instruction> populateInstructionsInMap() {
 		Map<Integer, Instruction> instructions = new HashMap<>();
 		String fileName = "src/Input.txt";
@@ -31,6 +32,8 @@ public class InitializeStructures {
 					String data[] = line.split(Tokens.COLON.getToken());
 					Instruction instruction = new Instruction();
 					instruction.setInstruction(data[1]);
+					instruction.setAddress(Integer.parseInt(data[0]));
+					instruction.setLatchIndex(-1);
 					instructions.put(Integer.parseInt(data[0]), instruction);
 				}
 				br.close();
@@ -177,4 +180,109 @@ public class InitializeStructures {
 		}
 		return instructionMap;
 	}
+	
+	public void setLatchIndexOfInstruction(Map<Integer, Instruction> instructionMap,Instruction inputInstruction){
+		if(instructionMap.size() > 0){
+			int startOfCount = inputInstruction.getAddress(); //relative to address of the instruction
+
+			//loop to check for next 4 instructions for dependency
+			for(int i = startOfCount ; i < startOfCount + 4; i++){
+				if(inputInstruction.getInstructionType().equals(InstructionEnum.ADD.getInstructionType())
+						|| inputInstruction.getInstructionType().equals(InstructionEnum.SUB.getInstructionType())
+						|| inputInstruction.getInstructionType().equals(InstructionEnum.MUL.getInstructionType())){
+					//I1: ADD R1 R2 R3 (inputInstr) 
+					//I2: ADD R4 R1 R5 (instrMap)
+					if(instructionMap.get(i).getInstructionType().equals(InstructionEnum.ADD.getInstructionType())
+							|| instructionMap.get(i).getInstructionType().equals(InstructionEnum.SUB.getInstructionType())
+							|| instructionMap.get(i).getInstructionType().equals(InstructionEnum.MUL.getInstructionType())){
+						
+						if(inputInstruction.getDestination().getOperandName()
+								.equals(instructionMap.get(i).getSource1().getOperandName())){
+							inputInstruction.setLatchIndex(0); //0 for ALU
+							break;
+						}
+						
+						if(inputInstruction.getDestination().getOperandName()
+								.equals(instructionMap.get(i).getSource2().getOperandName())){
+							inputInstruction.setLatchIndex(0); //0 for ALU
+							break;
+						}
+						
+					}
+					
+					/*if(instructionMap.get(i).getInstructionType().equals(InstructionEnum.STORE.getInstructionType())){
+						
+						if(inputInstruction.getDestination().getOperandName()
+								.equals(instructionMap.get(i).getSource1().getOperandName())){
+							break;
+						}
+						
+						if(inputInstruction.getDestination().getOperandName()
+								.equals(instructionMap.get(i).getSource2().getOperandName())){
+							break;
+						}
+						
+						inputInstruction.setLatchIndex(0); //0 for ALU
+						
+					}
+					
+					if(instructionMap.get(i).getInstructionType().equals(InstructionEnum.LOAD.getInstructionType())){
+						if(inputInstruction.getDestination().getOperandName()
+								.equals(instructionMap.get(i).getSource1().getOperandName())){
+							break;
+						}
+						
+						inputInstruction.setLatchIndex(0); //0 for ALU
+					}*/
+				}
+			}
+		}
+	}
+	
+	public void initalizeLatches(Map<String, LatchSource> map){
+		LatchSource latchSource = new LatchSource();
+		latchSource.setValidFlag(0);
+		
+		for (int i = 0; i < 15; i++) {
+			// Initializing 16 architectural registers(R0 to R15), -99999
+			// indicates garbage value for each register
+			map.put(Tokens.REGISTER_PREFIX.getToken() + i, latchSource);
+		}
+		
+	}
+	
+	public boolean checkForStall (Map<Integer, Instruction> instructionMap,Instruction inputInstruction){
+		boolean stallInstruction = false;
+		if(instructionMap.size() > 0){
+			int startOfCount = inputInstruction.getAddress(); //relative to address of the instruction
+
+			//loop to check for previous 4 instructions for dependency
+			for(int i = startOfCount ; i > startOfCount - 4 ; i--){ //
+				if(inputInstruction.getInstructionType().equals(InstructionEnum.ADD.getInstructionType())
+						|| inputInstruction.getInstructionType().equals(InstructionEnum.SUB.getInstructionType())
+						|| inputInstruction.getInstructionType().equals(InstructionEnum.MUL.getInstructionType())){
+					//I1: ADD R1 R2 R3 (inputInstr) 
+					//I2: ADD R4 R1 R5 (instrMap)
+					if(instructionMap.get(i).getInstructionType().equals(InstructionEnum.ADD.getInstructionType())
+							|| instructionMap.get(i).getInstructionType().equals(InstructionEnum.SUB.getInstructionType())
+							|| instructionMap.get(i).getInstructionType().equals(InstructionEnum.MUL.getInstructionType())){
+						
+						if(inputInstruction.getDestination().getOperandName()
+								.equals(instructionMap.get(i).getSource1().getOperandName())){
+							if(i == (startOfCount - 1))// ADD/SUB/MUL are consecutive instructions
+								stallInstruction = true;
+						}
+						
+						if(inputInstruction.getDestination().getOperandName()
+								.equals(instructionMap.get(i).getSource2().getOperandName())){
+							if(i == (startOfCount - 1))// ADD/SUB/MUL are consecutive instructions
+								stallInstruction = true;
+						}
+					}
+				}
+			}
+		}
+		return stallInstruction;
+	}
+
 }
