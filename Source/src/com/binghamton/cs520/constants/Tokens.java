@@ -1,7 +1,7 @@
 package com.binghamton.cs520.constants;
 
 public enum Tokens {
-	SPACE(" "),COLON(":"),REGISTER_PREFIX("R"),LITERAL("literal"), ARITH("ARITH");
+	SPACE(" "),COLON(":"),REGISTER_PREFIX("R"),LITERAL("literal");
 	
 	
 	private String string;

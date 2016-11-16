@@ -12,7 +12,7 @@ public class Instruction {
 	private boolean isALU2Executed = false;
 	private boolean isMemoryExecuted = false;
 	private int address;
-	private int latchIndex;
+	private boolean isDependent = false;
 	
 	public Instruction() {
 		// TODO Auto-generated constructor stub
@@ -99,30 +99,29 @@ public class Instruction {
 		this.isMemoryExecuted = isMemoryExecuted;
 	}
 
+	public int getAddress() {
+		return address;
+	}
+	
+	public void setAddress(int address) {
+		this.address = address;
+	}
+	
+	public boolean isDependent() {
+		return isDependent;
+	}
+
+	public void setDependent(boolean isDependent) {
+		this.isDependent = isDependent;
+	}
+
 	@Override
 	public String toString() {
 		return "Instruction [instruction=" + instruction + ", instructionType=" + instructionType + ", source1="
 				+ source1 + ", source2=" + source2 + ", source3=" + source3 + ", destination=" + destination
 				+ ", isDecoded=" + isDecoded + ", isALU1Executed=" + isALU1Executed + ", isALU2Executed="
-				+ isALU2Executed + ", isMemoryExecuted=" + isMemoryExecuted + "]";
+				+ isALU2Executed + ", isMemoryExecuted=" + isMemoryExecuted + ", address=" + address + ", isDependent="
+				+ isDependent + "]";
 	}
-
-	public int getAddress() {
-		return address;
-	}
-
-	public void setAddress(int address) {
-		this.address = address;
-	}
-
-	public int getLatchIndex() {
-		return latchIndex;
-	}
-
-	public void setLatchIndex(int latchIndex) {
-		this.latchIndex = latchIndex;
-	}
-
-	
 
 }

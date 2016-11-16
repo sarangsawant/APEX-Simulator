@@ -23,5 +23,10 @@ public class LatchSource {
 	public void setValidFlag(int validFlag) {
 		this.validFlag = validFlag;
 	}
+
+	@Override
+	public String toString() {
+		return "LatchSource [value=" + value + ", validFlag=" + validFlag + "]";
+	}
 	
 }
