@@ -13,7 +13,8 @@ public class Instruction {
 	private boolean isMemoryExecuted = false;
 	private int address;
 	private boolean isDependent = false;
-	
+	private int stallCycles = -1; /*-1 -> not checked for stall, 0 ->no stall, 1 -> 1 cycle stall....*/
+
 	public Instruction() {
 		// TODO Auto-generated constructor stub
 	}
@@ -34,7 +35,6 @@ public class Instruction {
 		this.instructionType = instructionType;
 	}
 
-	
 	public Operand getSource1() {
 		return source1;
 	}
@@ -66,7 +66,7 @@ public class Instruction {
 	public void setDestination(Operand destination) {
 		this.destination = destination;
 	}
-	
+
 	public boolean isDecoded() {
 		return isDecoded;
 	}
@@ -102,11 +102,11 @@ public class Instruction {
 	public int getAddress() {
 		return address;
 	}
-	
+
 	public void setAddress(int address) {
 		this.address = address;
 	}
-	
+
 	public boolean isDependent() {
 		return isDependent;
 	}
@@ -115,13 +115,21 @@ public class Instruction {
 		this.isDependent = isDependent;
 	}
 
+	public int getStallCycles() {
+		return stallCycles;
+	}
+
+	public void setStallCycles(int stallCycles) {
+		this.stallCycles = stallCycles;
+	}
+
 	@Override
 	public String toString() {
 		return "Instruction [instruction=" + instruction + ", instructionType=" + instructionType + ", source1="
 				+ source1 + ", source2=" + source2 + ", source3=" + source3 + ", destination=" + destination
 				+ ", isDecoded=" + isDecoded + ", isALU1Executed=" + isALU1Executed + ", isALU2Executed="
 				+ isALU2Executed + ", isMemoryExecuted=" + isMemoryExecuted + ", address=" + address + ", isDependent="
-				+ isDependent + "]";
+				+ isDependent + ", stallCycles=" + stallCycles + "]";
 	}
 
 }

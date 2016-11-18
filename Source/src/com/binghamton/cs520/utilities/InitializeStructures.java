@@ -77,7 +77,7 @@ public class InitializeStructures {
 		}
 
 		System.out.println("--------------------Memory content -------------------------");
-		for (int i = 0; i < 50; i++) {
+		for (int i = 0; i < 70; i++) {
 			System.out.println("Memory[" + i + "] -> " + memory[i]);
 		}
 
@@ -190,24 +190,28 @@ public class InitializeStructures {
 		return instructionMap;
 	}
 
-	/*
-	 * This method sets dependent field of instruction object to true if its
-	 * destination is same any source of the next consecutive 4 instructions
+	/**
+	 * If there is dependency between instructions from I->J, this method sets
+	 * dependent field of instruction 'I' to true so that it knows that it has
+	 * to forward result to forwarding latch.
+	 * 
+	 * @param instructionMap
+	 * @param inputInstruction
 	 */
 	public static void checkInstructionDependency(Map<Integer, Instruction> instructionMap,
 			Instruction inputInstruction) {
 		if (instructionMap.size() > 0) {
-			int startOfCount = inputInstruction.getAddress(); // relative to
-																// address of
-																// the
-																// instruction
+			int startOfCount = inputInstruction.getAddress();
 
 			/* loop to check for next 4 instructions for dependency */
-			for (int i = startOfCount; i < (startOfCount + 4); i++) {
+			for (int i = (startOfCount + 1); i <= (startOfCount + 4); i++) {
 				if (instructionMap.get(i) != null) {
+
 					if (inputInstruction.getInstructionType().equals(InstructionEnum.ADD.getInstructionType())
 							|| inputInstruction.getInstructionType().equals(InstructionEnum.SUB.getInstructionType())
-							|| inputInstruction.getInstructionType().equals(InstructionEnum.MUL.getInstructionType())) {
+							|| inputInstruction.getInstructionType().equals(InstructionEnum.MUL.getInstructionType())
+							|| inputInstruction.getInstructionType()
+									.equals(InstructionEnum.MOVC.getInstructionType())) {
 						/*
 						 * I1: ADD R1 R2 R3 (inputInstr) I2: ADD R4 R1 R5
 						 * (instrMap)
@@ -216,7 +220,9 @@ public class InitializeStructures {
 								|| instructionMap.get(i).getInstructionType()
 										.equals(InstructionEnum.SUB.getInstructionType())
 								|| instructionMap.get(i).getInstructionType()
-										.equals(InstructionEnum.MUL.getInstructionType())) {
+										.equals(InstructionEnum.MUL.getInstructionType())
+								|| instructionMap.get(i).getInstructionType()
+										.equals(InstructionEnum.STORE.getInstructionType())) {
 
 							if (inputInstruction.getDestination().getOperandName()
 									.equals(instructionMap.get(i).getSource1().getOperandName())) {
@@ -233,29 +239,27 @@ public class InitializeStructures {
 						}
 
 						/*
-						 * if(instructionMap.get(i).getInstructionType().equals(
-						 * InstructionEnum.STORE.getInstructionType())){
-						 * 
-						 * if(inputInstruction.getDestination().getOperandName()
-						 * .equals(instructionMap.get(i).getSource1().
-						 * getOperandName())){ break; }
-						 * 
-						 * if(inputInstruction.getDestination().getOperandName()
-						 * .equals(instructionMap.get(i).getSource2().
-						 * getOperandName())){ break; }
-						 * 
-						 * inputInstruction.setLatchIndex(0); //0 for ALU
-						 * 
-						 * }
-						 * 
-						 * if(instructionMap.get(i).getInstructionType().equals(
-						 * InstructionEnum.LOAD.getInstructionType())){
-						 * if(inputInstruction.getDestination().getOperandName()
-						 * .equals(instructionMap.get(i).getSource1().
-						 * getOperandName())){ break; }
-						 * 
-						 * inputInstruction.setLatchIndex(0); //0 for ALU }
+						 * Add/Sub/Mul/Mov -> LOAD i.e if load is dependent on
+						 * any of the 4 instructions
 						 */
+						if (instructionMap.get(i).getInstructionType()
+								.equals(InstructionEnum.LOAD.getInstructionType())) {
+							if (inputInstruction.getDestination().getOperandName()
+									.equals(instructionMap.get(i).getSource1().getOperandName())) {
+								inputInstruction.setDependent(true);
+								break;
+							}
+						}
+
+					}
+
+					/*Only STORE depends on LOAD*/
+					if (inputInstruction.getInstructionType().equals(InstructionEnum.LOAD.getInstructionType())) {
+						if (instructionMap.get(i).getInstructionType()
+								.equals(InstructionEnum.STORE.getInstructionType())) {
+							inputInstruction.setDependent(true);
+							break;
+						}
 					}
 				}
 			}
@@ -274,45 +278,91 @@ public class InitializeStructures {
 
 	}
 
-	public static boolean checkForInstructionStall(Map<Integer, Instruction> instructionMap, Instruction inputInstruction) {
-		boolean stallInstruction = false;
+	/**
+	 * If there is dependency between instructions from I->J, this function
+	 * check for instruction J to see for how much cycles it has to wait in
+	 * decode/RF stage. It sets the stallCycle variable accordingly
+	 * 
+	 * @param instructionMap
+	 * @param inputInstruction
+	 */
+	public static void checkForInstructionStallCycles(Map<Integer, Instruction> instructionMap,
+			Instruction inputInstruction) {
+		System.out.println("Inside checkForInstructionStallCycles method.");
 		if (instructionMap.size() > 0) {
 			int startOfCount = inputInstruction.getAddress();
 
-			// loop to check for previous 4 instructions for dependency
-			for (int i = startOfCount-1; i >= startOfCount - 4; i--) {
+			/* By default, no stall for every instruction */
+			inputInstruction.setStallCycles(0);
+
+			/* loop to check for previous 4 instructions for dependency */
+			for (int i = startOfCount - 1; i >= startOfCount - 4; i--) {
 				if (instructionMap.get(i) != null) {
 					if (inputInstruction.getInstructionType().equals(InstructionEnum.ADD.getInstructionType())
 							|| inputInstruction.getInstructionType().equals(InstructionEnum.SUB.getInstructionType())
-							|| inputInstruction.getInstructionType().equals(InstructionEnum.MUL.getInstructionType())) {
+							|| inputInstruction.getInstructionType().equals(InstructionEnum.MUL.getInstructionType())
+							|| inputInstruction.getInstructionType()
+									.equals(InstructionEnum.STORE.getInstructionType())) {
 						// I1: ADD R1 R2 R3 (inputInstr)
 						// I2: ADD R4 R1 R5 (instrMap)
 						if (instructionMap.get(i).getInstructionType().equals(InstructionEnum.ADD.getInstructionType())
 								|| instructionMap.get(i).getInstructionType()
 										.equals(InstructionEnum.SUB.getInstructionType())
 								|| instructionMap.get(i).getInstructionType()
-										.equals(InstructionEnum.MUL.getInstructionType())) {
+										.equals(InstructionEnum.MUL.getInstructionType())
+								|| instructionMap.get(i).getInstructionType()
+										.equals(InstructionEnum.MOVC.getInstructionType())) {
 
 							if (inputInstruction.getSource1().getOperandName()
 									.equals(instructionMap.get(i).getDestination().getOperandName())) {
 								/* ADD/SUB/MUL are consecutive instructions */
-								if (startOfCount == (i+1))
-									stallInstruction = true;
+								if (startOfCount == (i + 1)) {
+									inputInstruction.setStallCycles(1);
+									break;
+								}
 							}
 
+							if (inputInstruction.getSource2().getOperandName()
+									.equals(instructionMap.get(i).getDestination().getOperandName())) {
+								/* ADD/SUB/MUL are consecutive instructions */
+								if (startOfCount == (i + 1)) {
+									inputInstruction.setStallCycles(1);
+									break;
+								}
+							}
+						}
+					}
+
+					/*If Store depends on load*/
+					if (inputInstruction.getInstructionType().equals(InstructionEnum.STORE.getInstructionType())) {
+						if(instructionMap.get(i).getInstructionType().equals(InstructionEnum.LOAD.getInstructionType())){
+							break;
+						}
+					}
+					
+					/*If ADD/SUB/MUL/MOVC depends on Load*/
+					if (inputInstruction.getInstructionType().equals(InstructionEnum.LOAD.getInstructionType())) {
+						if (instructionMap.get(i).getInstructionType().equals(InstructionEnum.ADD.getInstructionType())
+								|| instructionMap.get(i).getInstructionType()
+										.equals(InstructionEnum.SUB.getInstructionType())
+								|| instructionMap.get(i).getInstructionType()
+										.equals(InstructionEnum.MUL.getInstructionType())
+								|| instructionMap.get(i).getInstructionType()
+										.equals(InstructionEnum.MOVC.getInstructionType())) {
+
 							if (inputInstruction.getSource1().getOperandName()
 									.equals(instructionMap.get(i).getDestination().getOperandName())) {
 								/* ADD/SUB/MUL are consecutive instructions */
-								if (startOfCount == (i+1))
-									stallInstruction = true;
+								if (startOfCount == (i + 1)) {
+									inputInstruction.setStallCycles(1);
+									break;
+								}
 							}
 						}
 					}
 				}
 			}
 		}
-		System.out.println("Check stall -> " + stallInstruction);
-		return stallInstruction;
 	}
 
 }
