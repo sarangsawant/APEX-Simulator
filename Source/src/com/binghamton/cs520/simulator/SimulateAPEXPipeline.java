@@ -135,7 +135,8 @@ public class SimulateAPEXPipeline {
 				source3.setOperandName(Tokens.LITERAL.getToken());
 				source3.setOperandValue(Integer.parseInt(instructionFields[3].substring(1)));
 				decodeStageList.get(0).setSource3(source3);
-			} else if (InstructionEnum.BNZ.getInstructionType().equals(instructionFields[0])) {
+			} else if (InstructionEnum.BNZ.getInstructionType().equals(instructionFields[0])
+					|| InstructionEnum.BZ.getInstructionType().equals(instructionFields[0])) {
 				// BNZ #20
 				decodeStageList.get(0).setInstructionType(instructionFields[0]);
 
@@ -144,14 +145,8 @@ public class SimulateAPEXPipeline {
 				literal.setOperandValue(Integer.parseInt(instructionFields[1].substring(1)));
 				decodeStageList.get(0).setSource1(literal);
 
-			} else if (InstructionEnum.BNZ.getInstructionType().equals(instructionFields[0])) {
-				decodeStageList.get(0).setInstructionType(instructionFields[0]);
-
-				Operand source1 = new Operand();
-				source1.setOperandName(Tokens.LITERAL.getToken());
-				source1.setOperandValue(Integer.parseInt(instructionFields[1].substring(1)));
-				decodeStageList.get(0).setSource1(source1);
 			}
+			
 			decodeStageList.get(0).setDecoded(true);
 			InitializeStructures.checkInstructionDependency(allInstructions, decodeStageList.get(0));
 			//System.out.println("Instuction in decode stage(After decode) -->" + decodeStageList.get(0).toString());
@@ -256,44 +251,19 @@ public class SimulateAPEXPipeline {
 		}
 	}
 
-	/**
-	 * Branch ALU
-	 */
-	private void branchExecutionStage1() {
-		/*
-		 * if(branchExecuteListOne.size() > 0){
-		 * if(InstructionEnum.BAL.getInstructionType().equals(
-		 * branchExecuteListOne.get(0).getInstructionType())){ //BAL R10, #19
-		 * int source1address =
-		 * branchExecuteListOne.get(0).getSource1().getOperandValue(); int
-		 * literal = branchExecuteListOne.get(0).getSource2().getOperandValue();
-		 * int destinationAddress = source1address + literal;
-		 * branchExecuteListOne.get(0).getDestination().setOperandValue(
-		 * destinationAddress); //execute branch from next stages programCnt =
-		 * destinationAddress; }else
-		 * if(InstructionEnum.BZ.getInstructionType().equals(
-		 * branchExecuteListOne.get(0).getInstructionType())){ //BZ #20 //need
-		 * to check the above instruction is in EX stage. } else
-		 * if(InstructionEnum.BNZ.getInstructionType().equals(
-		 * branchExecuteListOne.get(0).getInstructionType())){ //BNZ # -20 or
-		 * BNZ #12 //need to check the above instruction is in EX stage. } else
-		 * if(InstructionEnum.JUMP.getInstructionType().equals(
-		 * branchExecuteListOne.get(0).getInstructionType())){ //JUMP X, #0
-		 * where x is special register set to the next instruction of BAL }
-		 * 
-		 * }else{ //handle code here }
-		 */
-		System.out.println("Inside branchExecutionStage1");
-	}
-
-	private void branchExecutionDelay() {
-		System.out.println("Inside branchExecutionDelay");
-	}
-
 	private void branchStageOneExecution() {
 		System.out.println("Inside branchStageOneExecution method");
 		if (branchStageOneList.size() > 0) {
 			System.out.println("Branch Stage 		:: " + branchStageOneList.get(0));
+			
+			if(branchStageOneList.get(0).getInstructionType().equals(InstructionEnum.BAL.getInstructionType())){
+				//BAL R10, #19
+				//int source1 =
+				
+			}else if(branchStageOneList.get(0).getInstructionType().equals(InstructionEnum.JUMP.getInstructionType())){
+				//JUMP #0
+			}
+			
 			branchStageTwoList.add(branchStageOneList.get(0));
 			branchStageOneList.remove(0);
 		}
