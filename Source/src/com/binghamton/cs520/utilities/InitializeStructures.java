@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.binghamton.cs520.constants.InstructionEnum;
@@ -26,14 +26,15 @@ public class InitializeStructures {
 		try {
 			fr = new FileReader(file);
 			BufferedReader br = new BufferedReader(fr);
+			int pCounter = 4000;
 			String line;
 			try {
 				while ((line = br.readLine()) != null) {
-					String data[] = line.split(Tokens.COLON.getToken());
 					Instruction instruction = new Instruction();
-					instruction.setInstruction(data[1]);
-					instruction.setAddress(Integer.parseInt(data[0]));
-					instructions.put(Integer.parseInt(data[0]), instruction);
+					instruction.setInstruction(line);
+					instruction.setAddress(pCounter);
+					instructions.put(pCounter, instruction);
+					pCounter++;
 				}
 				br.close();
 				fr.close();
@@ -47,8 +48,8 @@ public class InitializeStructures {
 	}
 
 	public static Map<String, Integer> initializeArchitectureRegisterFile() {
-		System.out.println("Inside initializeRegisterFile method.");
-		Map<String, Integer> architectureRegFile = new HashMap<>();
+		//System.out.println("Inside initializeRegisterFile method.");
+		Map<String, Integer> architectureRegFile = new LinkedHashMap<>();
 		for (int i = 0; i < 15; i++) {
 			// Initializing 16 architectural registers(R0 to R15), -99999
 			// indicates garbage value for each register
@@ -58,7 +59,7 @@ public class InitializeStructures {
 	}
 
 	public static int[] initializeMemory() {
-		System.out.println("inside initializeMemory method");
+		//System.out.println("inside initializeMemory method");
 		int[] memory = new int[1000];
 		for (int i = 0; i < 999; i++) {
 			memory[i] = 99999;
@@ -66,33 +67,9 @@ public class InitializeStructures {
 		return memory;
 	}
 
-	public static void displayStructuresContent(Map<String, Integer> architectureRegFile, int[] memory,
-			Map<String, LatchSource> forwardingLatch) {
-		System.out.println("--------Architecture register file--------------");
-		Iterator it = architectureRegFile.entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry pair = (Map.Entry) it.next();
-			System.out.println(pair.getKey() + " = " + pair.getValue());
-			it.remove();
-		}
-
-		System.out.println("--------------------Memory content -------------------------");
-		for (int i = 0; i < 70; i++) {
-			System.out.println("Memory[" + i + "] -> " + memory[i]);
-		}
-
-		System.out.println("------------Forwarding latch--------------");
-		Iterator iterator = forwardingLatch.entrySet().iterator();
-		while (iterator.hasNext()) {
-			Map.Entry pair = (Map.Entry) iterator.next();
-			System.out.println(pair.getKey() + " = " + pair.getValue());
-			iterator.remove();
-		}
-	}
-
 	public static Map<Integer, Instruction> initAllInstructionsFields(Map<Integer, Instruction> instructions2,
 			Map<String, Integer> architectureRegFile) {
-		System.out.println(instructions2.size());
+		//System.out.println(instructions2.size());
 		// do same as decode stage function
 		int counter = 4000;
 		Map<Integer, Instruction> instructionMap = new HashMap<>();
@@ -184,7 +161,7 @@ public class InitializeStructures {
 				inputInstruction.setSource3(source3);
 			}
 			instructionMap.put(counter, inputInstruction);
-			System.out.println("instruction obj--> " + counter + "  " + instructionMap.get(counter));
+			//System.out.println("instruction obj--> " + counter + "  " + instructionMap.get(counter));
 			counter++;
 		}
 		return instructionMap;
@@ -267,7 +244,7 @@ public class InitializeStructures {
 	}
 
 	public static void initalizeLatches(Map<String, LatchSource> map) {
-		System.out.println("Inside initialize latch method.");
+		//System.out.println("Inside initialize latch method.");
 		for (int i = 0; i < 15; i++) {
 			LatchSource latchSource = new LatchSource();
 			latchSource.setValidFlag(0);
@@ -288,7 +265,7 @@ public class InitializeStructures {
 	 */
 	public static void checkForInstructionStallCycles(Map<Integer, Instruction> instructionMap,
 			Instruction inputInstruction) {
-		System.out.println("Inside checkForInstructionStallCycles method.");
+		//System.out.println("Inside checkForInstructionStallCycles method.");
 		if (instructionMap.size() > 0) {
 			int startOfCount = inputInstruction.getAddress();
 

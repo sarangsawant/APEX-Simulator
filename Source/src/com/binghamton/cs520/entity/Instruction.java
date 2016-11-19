@@ -125,11 +125,7 @@ public class Instruction {
 
 	@Override
 	public String toString() {
-		return "Instruction [instruction=" + instruction + ", instructionType=" + instructionType + ", source1="
-				+ source1 + ", source2=" + source2 + ", source3=" + source3 + ", destination=" + destination
-				+ ", isDecoded=" + isDecoded + ", isALU1Executed=" + isALU1Executed + ", isALU2Executed="
-				+ isALU2Executed + ", isMemoryExecuted=" + isMemoryExecuted + ", address=" + address + ", isDependent="
-				+ isDependent + ", stallCycles=" + stallCycles + "]";
+		return instruction;
 	}
 
 }
