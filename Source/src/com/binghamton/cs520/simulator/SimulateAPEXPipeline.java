@@ -23,16 +23,17 @@ public class SimulateAPEXPipeline {
 	private List<Instruction> decodeStageList = new ArrayList<>();
 	private List<Instruction> arithExecuteStageOneList = new ArrayList<>();
 	private List<Instruction> arithExecuteStageTwoList = new ArrayList<>();
-	private List<Instruction> branchExecuteListOne = new ArrayList<>();
-	private List<Instruction> branchExecuteListTwo = new ArrayList<>();
 	private List<Instruction> memoryStageList = new ArrayList<>();
 	private List<Instruction> writeBackStageList = new ArrayList<>();
+	private List<Instruction> branchStageOneList = new ArrayList<>();
+	private List<Instruction> branchStageTwoList = new ArrayList<>();
+
 	private Map<String, LatchSource> forwardingLatch = new HashMap<>();
 
 	private Map<Integer, Instruction> allInstructions = new HashMap<>();
 	private boolean isDecodeStageStalled = false;
-	private int flag = 0;
-	private String instructioninWBStage = "";
+	private int branchFlag = 0;
+	private String instructioninWBStage;
 
 	private void fetchStageExecution() {
 		//System.out.println("Inside fetchStageExecution method");
@@ -143,6 +144,13 @@ public class SimulateAPEXPipeline {
 				literal.setOperandValue(Integer.parseInt(instructionFields[1].substring(1)));
 				decodeStageList.get(0).setSource1(literal);
 
+			} else if (InstructionEnum.BNZ.getInstructionType().equals(instructionFields[0])) {
+				decodeStageList.get(0).setInstructionType(instructionFields[0]);
+
+				Operand source1 = new Operand();
+				source1.setOperandName(Tokens.LITERAL.getToken());
+				source1.setOperandValue(Integer.parseInt(instructionFields[1].substring(1)));
+				decodeStageList.get(0).setSource1(source1);
 			}
 			decodeStageList.get(0).setDecoded(true);
 			InitializeStructures.checkInstructionDependency(allInstructions, decodeStageList.get(0));
@@ -159,8 +167,9 @@ public class SimulateAPEXPipeline {
 			int source1 = 0, source2 = 0;
 
 			/*
-			 * Populate source1 and source2 for Add,Sub and Mul instruction
-			 * correctly. i.e check if it has any valid forwarded result
+			 * Populate source1 and source2 for Add,Sub ,Mul and Store
+			 * instruction correctly. i.e check if it has any valid forwarded
+			 * result
 			 */
 			if (InstructionEnum.ADD.getInstructionType().equals(arithStage1instruction.getInstructionType())
 					|| InstructionEnum.SUB.getInstructionType().equals(arithStage1instruction.getInstructionType())
@@ -281,6 +290,24 @@ public class SimulateAPEXPipeline {
 		System.out.println("Inside branchExecutionDelay");
 	}
 
+	private void branchStageOneExecution() {
+		System.out.println("Inside branchStageOneExecution method");
+		if (branchStageOneList.size() > 0) {
+			System.out.println("Branch Stage 		:: " + branchStageOneList.get(0));
+			branchStageTwoList.add(branchStageOneList.get(0));
+			branchStageOneList.remove(0);
+		}
+
+	}
+
+	private void branchStageTwoExecution() {
+		System.out.println("Inside branchStageTwoExecution method");
+		if (branchStageTwoList.size() > 0) {
+			memoryStageList.add(branchStageTwoList.get(0));
+			branchStageTwoList.remove(0);
+		}
+	}
+
 	private void memoryStageExecution() {
 		//System.out.println("memoryStageExecution");
 		if (memoryStageList.size() > 0) {
@@ -331,6 +358,11 @@ public class SimulateAPEXPipeline {
 		}
 	}
 
+	/**
+	 * This method writes the result generated into forwarding latch.
+	 * 
+	 * @param instruction
+	 */
 	private void forwardGeneratedResult(Instruction instruction) {
 		//System.out.println("Inside forwardGeneratedResult method.");
 		if ((instruction.getInstructionType().equals(InstructionEnum.ADD.getInstructionType())
@@ -345,12 +377,11 @@ public class SimulateAPEXPipeline {
 		}
 	}
 
-	/*
-	 * populate instructions in map from file, initalize architectural register
-	 * file and memory
-	 */
 	public void simulateProcessingCycles(int totalSimulateCycles) {
-		// InitializeStructures structures = new InitializeStructures();
+		/*
+		 * populate instructions in map from file, initalize architectural
+		 * register file and memory
+		 */
 		instructions = InitializeStructures.populateInstructionsInMap();
 		architectureRegFile = InitializeStructures.initializeArchitectureRegisterFile();
 		memory = InitializeStructures.initializeMemory();
@@ -392,7 +423,11 @@ public class SimulateAPEXPipeline {
 					InitializeStructures.checkForInstructionStallCycles(allInstructions, decodeStageList.get(0));
 
 				if (decodeStageList.get(0).getStallCycles() == 0) {
-					arithExecuteStageOneList.add(decodeStageList.get(0));
+					if (decodeStageList.get(0).getInstructionType().equals(InstructionEnum.BNZ.getInstructionType()))
+						branchStageOneList.add(decodeStageList.get(0));
+					else
+						arithExecuteStageOneList.add(decodeStageList.get(0));
+
 					decodeStageList.remove(0);
 					decodeStageExecution();
 					isDecodeStageStalled = false;
@@ -403,6 +438,7 @@ public class SimulateAPEXPipeline {
 				}
 			}
 
+			
 			// ALU stage 1
 			if (arithExecuteStageOneList.size() == 1 && !arithExecuteStageOneList.get(0).isALU1Executed()) {
 				arithmeticUnitStageExecution1();
@@ -411,14 +447,20 @@ public class SimulateAPEXPipeline {
 				 * Decode stage has recovered from stall, so instructions in
 				 * next stages should continue execution
 				 */
-				if (arithExecuteStageTwoList.size() == 0)
+				if ((arithExecuteStageTwoList.size()) == 0 && (memoryStageList.size() == 0)
+						&& (writeBackStageList.size() == 0))
 					continue;
 			} else if (arithExecuteStageOneList.size() > 0) {
 				arithExecuteStageTwoList.add(arithExecuteStageOneList.get(0));
 				arithExecuteStageOneList.remove(0);
 				arithmeticUnitStageExecution1();
 			}
-
+			
+			if(branchStageOneList.size()>0){
+				branchStageOneExecution();
+				branchFlag++;
+			}
+			
 			// ALU stage 2
 			if (arithExecuteStageTwoList.size() == 1 && !arithExecuteStageTwoList.get(0).isALU2Executed()) {
 				arithmeticUnitStageExecution2();
@@ -427,7 +469,7 @@ public class SimulateAPEXPipeline {
 				 * Decode stage has recovered from stall, so instructions in
 				 * next stages should continue execution
 				 */
-				if (memoryStageList.size() == 0)
+				if ((memoryStageList.size() == 0) && (writeBackStageList.size() == 0))
 					continue;
 			} else if (arithExecuteStageTwoList.size() > 0) {
 				memoryStageList.add(arithExecuteStageTwoList.get(0));
@@ -435,6 +477,15 @@ public class SimulateAPEXPipeline {
 				arithmeticUnitStageExecution2();
 			}
 
+			if(branchStageTwoList.size()>0){
+				if(branchFlag==2){
+					branchStageTwoExecution();
+					branchFlag=0;
+				}	
+				else
+					branchFlag++;
+			}
+			
 			// MemoryStage
 			if (memoryStageList.size() == 1 && !memoryStageList.get(0).isMemoryExecuted()) {
 				memoryStageExecution();

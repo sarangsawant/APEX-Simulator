@@ -159,6 +159,14 @@ public class InitializeStructures {
 				source3.setOperandName(Tokens.LITERAL.getToken());
 				source3.setOperandValue(Integer.parseInt(instructionFields[3].substring(1)));
 				inputInstruction.setSource3(source3);
+			}else if(InstructionEnum.BNZ.getInstructionType().equals(instructionFields[0])){
+				//BNZ #-16
+				inputInstruction.setInstructionType(instructionFields[0]);
+				
+				Operand source1 = new Operand();
+				source1.setOperandName(Tokens.LITERAL.getToken());
+				source1.setOperandValue(Integer.parseInt(instructionFields[1].substring(1)));
+				inputInstruction.setSource1(source1);
 			}
 			instructionMap.put(counter, inputInstruction);
 			//System.out.println("instruction obj--> " + counter + "  " + instructionMap.get(counter));
